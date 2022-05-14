@@ -1,23 +1,44 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import { firestore } from "./firebase";
 
 function App() {
+  let [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    let f = async () => {
+      let querySnapshot = await firestore.collection("posts").get();
+      // console.log(querySnapshot)
+      let tempArr = [];
+
+      querySnapshot.forEach((doc) => {
+        tempArr.push({
+          id: doc.id,
+          data: doc.data(),
+        });
+      });
+      setPosts(tempArr);
+      console.log(tempArr);
+    };
+    f();
+  }, []);
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <ul>
+        {posts.map((el) => (
+          <li key={el.id}>{el.data.Body}</li>
+        ))}
+      </ul>
+
+      <input
+        type="text"
+        onKeyDown={(e) => {
+          if (e.code === "Enter") {
+            let post = e.currentTarget.value;
+            firestore.collection("posts").add({ Body: post });
+            e.currentTarget.value="";
+          }
+        }}
+      />
     </div>
   );
 }
